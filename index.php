@@ -12,7 +12,8 @@
   try {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       // Polaczenie z bazą danych
-      $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbname, 'root', 'root');
+      $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbname, $username, $password);
+      $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
       // Przygotowanie zapytania
       $query = $pdo->prepare('INSERT INTO `subscribers`(`fname`, `email`) VALUES(
@@ -39,6 +40,7 @@
       }
 
       echo 'Polaczenie nawiazane.';
+      $query->closeCursor();
     }
   } catch(PDOException $e) {
     echo 'Polaczenie nie moglo zostac utworzone: ' . $e->getMessage();

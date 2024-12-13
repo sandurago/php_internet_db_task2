@@ -15,3 +15,12 @@ button {
 th, td {
   padding: 10px 15px;
 }
+
+.labels {
+  display: flex;
+  flex-direction: column;
+}
+
+.subscriber-form {
+  display: flex;
+}

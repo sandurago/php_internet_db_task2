@@ -9,7 +9,8 @@
 
   try {
     // Polaczenie z baza danych
-    $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbname, 'root', 'root');
+    $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbname, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Przygotowanie zapytania
     $query = $pdo->prepare('DELETE FROM subscribers WHERE id = :id');
@@ -30,6 +31,7 @@
     } else {
       $result = 'Błąd usuwania użytkownika. Spróbuj jeszcze raz.';
     }
+    $query->closeCursor();
   } catch(PDOException $e) {
     $result = 'Polaczenie nie moglo zostac utworzone: ' . $e->getMessage();
   }
