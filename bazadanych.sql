@@ -42,6 +42,7 @@ FOR EACH ROW
 INSERT INTO test.audit_subscribers (subscriber_name, action_performed, date_added)
 VALUES (OLD.fname, "Updated a subscriber", NOW());
 
+# Widoki do zadania_3
 CREATE VIEW users_added AS
 SELECT subscriber_name, date_added
 FROM audit_subscribers
@@ -60,12 +61,22 @@ WHERE action_performed = 'Updated a subscriber';
 CREATE VIEW users_added_deleted AS
 SELECT ud.subscriber_name, ua.date_added, ud.date_deleted
 FROM users_deleted ud
-         JOIN users_added ua
-              ON ud.subscriber_name = ua.subscriber_name;
+JOIN users_added ua
+ON ud.subscriber_name = ua.subscriber_name;
 
 CREATE VIEW users_exist AS
 SELECT ua.subscriber_name
 FROM users_added ua
-         LEFT JOIN users_deleted ud
-                   ON ua.subscriber_name = ud.subscriber_name
+LEFT JOIN users_deleted ud
+ON ua.subscriber_name = ud.subscriber_name
 WHERE ud.subscriber_name IS NULL;
+
+# Widok z ktorego korzysta plik viewsubsribers.php do wyswietlania danych
+CREATE VIEW all_users AS
+SELECT ua.subscriber_name, ua.date_added, ue.date_edited, ud.date_deleted
+FROM users_added ua
+LEFT JOIN users_edited ue
+ON ua.subscriber_name = ue.subscriber_name
+LEFT JOIN users_deleted ud
+ON ua.subscriber_name = ud.subscriber_name;
+

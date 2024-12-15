@@ -7,41 +7,43 @@
   $query = '';
   $result = '';
 
-  $tableHeaders = [];
+  try {
+    // Polaczenie z baza danych
+    $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbname, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-  if($_SERVER["REQUEST_METHOD"] == "POST") {
-      try {
-        // Polaczenie z baza danych
-        $pdo = new PDO('mysql:host=' . $host . ';dbname=' . $dbname, $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Przygotowanie zapytania dla tabeli glownej
+    $query = $pdo->query('SELECT id, fname, email FROM subscribers');
 
+    // Sprawdzenie czy sa rekordy w zapytaniu
+    if ($query->rowCount() == 0) {
+        $result = 'Tabela nie zawiera rekordów.';
+    }
 
-        $sql_tables = '';
-        $viewsSet = array_unique($_POST);
-        $viewsValues = array_values($viewsSet);
-        var_dump($viewsSet);
-        var_dump($viewsValues);
+    // Sprawdzenie czy nastapilo wyslanie ządania dla wyswietlenia danych z tabeli audit_subscribers
+    if($_SERVER["REQUEST_METHOD"] == "POST") {
+        // Przygotowanie zapytania, ta kolumna bedzie zawsze wybierana
+        $stmt = 'SELECT subscriber_name';
 
-        foreach ($viewsValues as $view) {
-            $sql_tables = $sql_tables . $view . ' ';
+        // Jezeli zostal wybrany checkbox z "Data dodania"
+        if($_POST['users_added'] == 'users_added') {
+            $stmt = $stmt . ', date_added';
+        } // Jezeli zostal wybrany checkbox z "Data edytowania"
+        if($_POST['users_edited'] == 'users_edited') {
+            $stmt = $stmt . ', date_edited';
+        } // Jezeli zostal wybrany checkbox z "Data usuniecia"
+        if ($_POST['users_deleted'] == 'users_deleted') {
+            $stmt = $stmt . ', date_deleted';
         }
-        var_dump($sql_tables);
-//        $query = $pdo->query('SELECT * FROM ')
 
         // Przygotowanie zapytania
-        $query = $pdo->query('SELECT id, fname, email FROM subscribers');
+        $query_log = $pdo->query($stmt . ' FROM `all_users`');
 
-        // Pobieranie pierwszego rekordu z tabeli, aby zobaczyc czy tabela posiada rekordy
-        $is_record = $query->fetch();
-
-        // Sprawdzenie czy zmienna $is_record jest pusta, w celu wyswietlenia informacji o braku rekordow
-        if (empty($is_record)) {
-          $result = 'Tabela nie zawiera rekordów.';
-        }
         echo 'Połączenie nawiązane.';
-      } catch(PDOException $e) {
-        echo 'Polaczenie nie moglo zostac utworzone: ' . $e->getMessage();
       }
+
+  } catch (PDOException $e) {
+      echo 'Polaczenie nie moglo zostac utworzone: ' . $e->getMessage();
   }
 ?>
 
@@ -58,13 +60,26 @@
   <p>Edit - etyduje dane użytkownika. Po edycji uruchomi się wyzwalacz.</p>
   <p>Delete - usuwa użytkownika. Po usunięciu uruchomi się wyzwalacz.</p>
 
+  <table>
+      <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Action</th>
+      </tr>
+      <?php foreach($query as $row) { ?>
+          <tr>
+              <td><?php echo $row['id'] ?></td>
+              <td><?php echo $row['fname'] ?></td>
+              <td><?php echo $row['email'] ?></td>
+              <td>
+                  <a href="subscriber_edit.php?id=<?php echo $row['id'] ?>">Edit</a> | <a href="subscriber_del.php?id=<?php echo $row['id']?>">Delete</a>
+              </td>
+          </tr>
+      <?php } // foreach ?>
+  </table>
+
   <form action="" method="POST" class="subscriber-form">
-      <select name="user-type" id="user-type">
-          <option value="users_added" onclick="setValue('users_added')">Wszyscy</option>
-          <option value="users_exist" onclick="setValue('users_exist')">Istniejący</option>
-          <option value="users_edited" onclick="setValue('users_edited')">Edytowani</option>
-          <option value="users_deleted" onclick="setValue('users_deleted')">Usunięci</option>
-      </select>
       <div class="labels">
           <div>
               <label for="date-add">Data dodania</label>
@@ -84,37 +99,42 @@
 
     <table>
       <tr>
-        <th>#</th>
         <th>Name</th>
-        <th>Email</th>
+        <?php if ($_POST['users_added'] == 'users_added'): ?>
         <th>Date of insert</th>
-        <th>Date of edit</th>
+        <?php endif; ?>
+        <?php if ($_POST['users_edited'] == 'users_edited'): ?>
+        <th>Date of update</th>
+        <?php endif; ?>
+        <?php if ($_POST['users_deleted'] == 'users_deleted'): ?>
         <th>Date of deletion</th>
-        <th>Action</th>
+        <?php endif; ?>
       </tr>
-      <?php foreach($query as $row) { ?>
+      <?php foreach($query_log as $row): ?>
       <tr>
-        <td><?php echo $row['id'] ?></td>
-        <td><?php echo $row['fname'] ?></td>
-        <td><?php echo $row['email'] ?></td>
-        <td>insert</td>
-        <td>edit</td>
-        <td>delete</td>
-        <td>
-          <a href="subscriber_edit.php?id=<?php echo $row['id'] ?>">Edit</a> | <a href="subscriber_del.php?id=<?php echo $row['id']?>">Delete</a>
-        </td>
+        <td><?php echo $row['subscriber_name'] ?></td>
+        <?php if ($_POST['users_added'] == 'users_added'): ?>
+        <td><?php echo $row['date_added'] ?></td>
+        <?php endif; ?>
+        <?php if ($_POST['users_edited'] == 'users_edited'): ?>
+        <td><?php if($row['date_edited']) {
+            echo $row['date_edited'];
+        } else {
+            echo 'Not updated';
+            }?></td>
+        <?php endif; ?>
+        <?php if ($_POST['users_deleted'] == 'users_deleted'): ?>
+        <td><?php if($row['date_deleted']) {
+            echo $row['date_deleted'];
+        } else {
+            echo 'Not deleted';
+            }?></td>
+        <?php endif; ?>
       </tr>
-      <?php } // foreach ?>
+      <?php endforeach; ?>
       <?php $query->closeCursor(); ?>
     </table>
     <p><?php echo $result; ?></p>
   <a href="index.php">Formularz</a>
 </body>
 </html>
-
-<script>
-function setValue(string) {
-    const deleted = document.getElementById('date-delete');
-   string == 'current' ? deleted.disabled = true : deleted.disabled = false;
-}
-</script>
