@@ -12,6 +12,18 @@ button {
   margin: 10px 0 0;
 }
 
+table {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 1px solid darkgray;
+}
+
+.table-title {
+  font-weight: 500;
+  color: brown;
+  margin-top: 50px;
+}
+
 th, td {
   padding: 10px 15px;
 }

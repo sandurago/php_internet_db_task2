@@ -68,5 +68,7 @@
   <?php echo $err ?>
   <?php echo $result ?>
   <a href="viewsubscribers.php">Lista użytkowników</a>
+  <a href="subscribersdynamictable.php">Dynamiczna tabela użytkowników</a>
+  <a href="subscriberstables.php">Tabele statyczne użytkowników</a>
 </body>
 </html>
